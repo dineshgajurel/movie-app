@@ -123,7 +123,10 @@ const App = () => {
                 {trendingMovies.map((movie, index) => (
                   <li key={movie.$id}>
                     <p>{index + 1}</p>
-                    <img src={movie.poster_url} alt={movie.title} />
+                    <div className="flex flex-col">
+                      <img src={movie.poster_url} alt={movie.movie_title}/>
+                      <h3 className="text-white font-bold text-base line-clamp-1 mt-4">{movie.movie_title}</h3>
+                    </div>
                   </li>
                 ))}
               </ul>
