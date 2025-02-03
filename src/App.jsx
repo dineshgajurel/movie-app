@@ -4,6 +4,7 @@ import Search from "./components/Search";
 import Spinner from "./components/Spinner";
 import MovieCard from "./components/MovieCard";
 import { getTrendingMovies, updateSearchCount } from "./appwrite";
+import { Pagination } from "./components/Pagination";
 
 const API_BASE_URL = "https://api.themoviedb.org/3";
 
@@ -29,21 +30,29 @@ const App = () => {
   const [errorMessageTrending, setErrorMessageTrending] = useState("");
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
 
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   useDebounce(
     () => {
       setDebouncedSearchTerm(searchTerm);
+      setPage(1);
     },
     500,
     [searchTerm]
   );
 
-  const fetchMovies = async (query = "") => {
+  const fetchMovies = async (query = "",page=1) => {
     setIsLoading(true);
     setErrorMessage("");
+
+    console.log(query,page);
+    
     try {
       const endpoint = query
-        ? `${API_BASE_URL}/search/movie?query=${query}`
-        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+        ? `${API_BASE_URL}/search/movie?query=${query}&page=${page}`
+        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}`;
       const response = await fetch(endpoint, API_OPTIONS);
       console.log(response);
 
@@ -57,6 +66,8 @@ const App = () => {
         return;
       }
       setMovieList(data.results || []);
+      setTotalPages(data.total_pages);
+      setPage(data.page);
 
       if (query && data.results.length > 0) {
         console.log(data.results[0]);
@@ -84,13 +95,15 @@ const App = () => {
     }
   };
 
+
   useEffect(() => {
-    fetchMovies(debouncedSearchTerm);
-  }, [debouncedSearchTerm]);
+    fetchMovies(debouncedSearchTerm,page);
+  }, [debouncedSearchTerm, page]);
 
   useEffect(() => {
     fetchTrendingMovies();
   }, []);
+
 
   return (
     <main>
@@ -148,6 +161,12 @@ const App = () => {
             </ul>
           )}
         </section>
+
+      
+      <section className="pagination">
+        <Pagination page={page} totalPages={totalPages}  onPageChange={setPage} />
+      </section>
+  
       </div>
     </main>
   );
