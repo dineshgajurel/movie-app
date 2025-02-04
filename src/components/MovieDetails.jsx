@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Spinner from "./Spinner";
-
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const API_BASE_URL = import.meta.env.VITE_TMDB_BASE_URL;
+import { movieService } from "../services/api";
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -15,19 +13,7 @@ const MovieDetails = () => {
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/movie/${id}?language=en-US&append_to_response=videos`,
-          {
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${API_KEY}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Movie not found");
-        }
-        const data = await response.json();
+        const data = await movieService.getMovieDetails(id);
         setMovie(data);
       } catch (err) {
         setError(err.message);

@@ -3,24 +3,12 @@ import { useEffect, useState } from "react";
 import { useDebounce } from "react-use";
 import Search from "./Search";
 import Spinner from "./Spinner";
-import { getTrendingMovies, updateSearchCount } from "../services/appwrite";
 import { Pagination } from "./Pagination";
 import MovieCard from "./MovieCard";
 
-const API_BASE_URL = import.meta.env.VITE_TMDB_BASE_URL;
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-
-const API_OPTIONS = {
-  method: "GET",
-  headers: {
-    accept: "application/json",
-    Authorization: `Bearer ${API_KEY}`,
-  },
-};
+import { movieService } from "../services/api";
 
 const Home = () => {
-
-
    const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   
@@ -49,31 +37,16 @@ const Home = () => {
       setIsLoading(true);
       setErrorMessage("");
   
-      console.log(query,page);
-      
       try {
-        const endpoint = query
-          ? `${API_BASE_URL}/search/movie?query=${query}&page=${page}`
-          : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}`;
-        const response = await fetch(endpoint, API_OPTIONS);
-        console.log(response);
-  
-        if (!response.ok) {
-          throw new Error("error while fetching movies");
-        }
-        const data = await response.json();
-        if (data.response === false) {
-          setErrorMessage(data.Error || "Error fetching movies");
-          setMovieList([]);
-          return;
-        }
+        const data = query ? await movieService.searchMovies(query,page): await movieService.getAllMovies(page);
+
         setMovieList(data.results || []);
         setTotalPages(data.total_pages);
         setPage(data.page);
   
         if (query && data.results.length > 0) {
           console.log(data.results[0]);
-          await updateSearchCount(query, data.results[0]);
+          await movieService.updateSearchCount(query, data.results[0]);
         }
       } catch (error) {
         console.error(error);
@@ -87,7 +60,7 @@ const Home = () => {
       setIsLoadingTrending(true);
       setErrorMessageTrending("");
       try {
-        const movies = await getTrendingMovies();
+        const movies = await movieService.getTrendingMovies();
         setTrendingMovies(movies);
       } catch (error) {
         console.error(error);
